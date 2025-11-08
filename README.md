@@ -123,4 +123,3 @@ So the design here is:
 ### Contributing
 
 Pull requests are welcome! If you find issues, feel free to open one.
-```
