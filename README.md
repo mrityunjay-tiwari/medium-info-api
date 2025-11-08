@@ -90,16 +90,20 @@ Endpoint: /medium/avatar?url=<article_url> Purpose: Fetch only the author avatar
 
 ### Example Response
 
+```ts
 {
   "success": true,
   "data": {
     "title": "How to Think Clearly",
-    "author": "John Doe",
-    "readTime": "6 min read",
+    "authorName": "John Doe",
+    "pageContent": "6 min read",
+    "firstLine": "Sample first line",
     "publishedDate": "Sep 20, 2025",
-    "tags": ["productivity", "life", "philosophy"]
+    "clapCount": "1.2k",
+    "commentsCount": "72",
+    "heroImage": "https://miro.medium.com/v2/resize:fit:1200/1*71nGDtlRxS8JNC0YVwLEBw.jpeg",
   },
-  "message": "To fetch author avatar, call: http://localhost:3000/medium/avatar?url=<medium_article_url>"
+
 }
 
 
