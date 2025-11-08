@@ -105,7 +105,7 @@ Endpoint: /medium/avatar?url=<article_url> Purpose: Fetch only the author avatar
   },
 
 }
-
+```
 
 ### Why Avatar is Separate?
 
