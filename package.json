@@ -6,7 +6,7 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "repository": {
-    "url": ""
+    "url": "https://github.com/mrityunjay-tiwari/medium-info-api"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -16,7 +16,8 @@
   "keywords": [
     "medium",
     "api",
-    "scraper"
+    "scraper",
+    "article"
   ],
   "author": "mrityunjay_18",
   "license": "MIT",
