@@ -1,0 +1,36 @@
+{
+  "name": "medium-info-api",
+  "version": "0.0.1",
+  "description": "It is a TypeScript library that provides you with all the information about any medium article (title, pageContent, main image url, author name, author image url etc.) just by providing link of the article.",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "repository": {
+    "url": ""
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "medium",
+    "api",
+    "scraper"
+  ],
+  "author": "mrityunjay_18",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
+    "@types/node": "^24.10.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "cheerio": "^1.1.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "playwright": "^1.56.1"
+  }
+}
