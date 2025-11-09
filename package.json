@@ -8,6 +8,7 @@
   "repository": {
     "url": "https://github.com/mrityunjay-tiwari/medium-info-api"
   },
+  "files": ["dist"],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
