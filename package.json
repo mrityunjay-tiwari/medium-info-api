@@ -1,6 +1,6 @@
 {
   "name": "medium-info-api",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "It is a TypeScript library that provides you with all the information about any medium article (title, pageContent, main image url, author name, author image url etc.) just by providing link of the article.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
