@@ -7,10 +7,11 @@ import { getMediumHeroImage } from "../functions/getHeroImage.js";
 import { getFullContent } from "../functions/getPageContent.js";
 import { getPublishedDate } from "../functions/getPublishedDate.js";
 import { scrapeMediumTitle } from "../functions/getTitle.js";
+import type { MediumArticleInfo } from "../types.js";
 
 let link : string
 
-export const getArticleInfo = async (link: string) => {
+export const getArticleInfo = async (link: string): Promise<MediumArticleInfo> => {
   const [
     title,
     authorName,
