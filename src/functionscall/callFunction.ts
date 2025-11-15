@@ -20,7 +20,8 @@ export const getArticleInfo = async (link: string): Promise<MediumArticleInfo> =
     publishedDate,
     clapCount,
     commentsCount,
-    heroImage
+    heroImage,
+    authorAvatar
   ] = await Promise.all([
     scrapeMediumTitle(link),
     getMediumAuthorName(link),
@@ -30,6 +31,7 @@ export const getArticleInfo = async (link: string): Promise<MediumArticleInfo> =
     getClapCount(link),
     getCommentsCount(link),
     getMediumHeroImage(link),
+    getMediumAuthorAvatar(link)
   ]);
 
   return {
@@ -41,17 +43,6 @@ export const getArticleInfo = async (link: string): Promise<MediumArticleInfo> =
     clapCount,
     commentsCount,
     heroImage,
-  };
-};
-
-export const getAuthorAvatar = async (link: string) => {
-  const [
-    authorAvatar    
-  ] = await Promise.all([
-    getMediumAuthorAvatar(link)
-  ]);
-
-  return {
     authorAvatar
   };
 };

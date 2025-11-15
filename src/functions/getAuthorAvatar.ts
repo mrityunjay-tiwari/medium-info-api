@@ -1,118 +1,73 @@
-import {chromium} from 'playwright';
+import axios from "axios";
+import * as cheerio from "cheerio";
 
-export async function getMediumAuthorAvatar(url: string) {
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({
-    userAgent:
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    locale: "en-US",
-  });
-  const page = await context.newPage();
-
+export async function getMediumAuthorAvatar(url: string): Promise<string> {
   try {
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
-
-    await page.waitForTimeout(20000);
-
-    const result = await page.evaluate(() => {
-      const toAbsolute = (url: string) => {
-        try {
-          return new URL(url, document.baseURI).href;
-        } catch {
-          return url;
-        }
-      };
-
-      const getSrcFromImg = (img: any) => {
-        if (!img) return null;
-        if (img.getAttribute("src")) return img.getAttribute("src");
-        if (img.getAttribute("data-src")) return img.getAttribute("data-src");
-        if (img.dataset && img.dataset.src) return img.dataset.src;
-        const ss = img.getAttribute("srcset");
-        if (ss) {
-          const first = ss.split(",")[0].trim().split(" ")[0];
-          if (first) return first;
-        }
-        return null;
-      };
-
-      const getBgImage = (el: any) => {
-        if (!el) return null;
-        const style = window.getComputedStyle(el);
-        const bg = style.backgroundImage || style.getPropertyValue("background-image");
-        if (!bg || bg === "none") return null;
-        const m = bg.match(/url\(["']?(.*?)["']?\)/);
-        return m ? m[1] : null;
-      };
-
-      const selectors = [
-        'img[data-testid="authorAvatar"]',
-        'img[data-testid*="avatar"]',
-        'a[data-testid="authorName"] img',
-        'div[data-testid="authorName"] img',
-        'article header img',               
-        'header img',                       
-        'img[alt*="Avatar"]',
-        'img[alt*="avatar"]'
-      ];
-
-      const debug = [];
-      for (const sel of selectors) {
-        const el = document.querySelector(sel);
-        debug.push({ selector: sel, found: !!el, outerHTML: el ? el.outerHTML.slice(0, 300) : null });
-        const src = getSrcFromImg(el);
-        if (src) return { src: toAbsolute(src), debug };
-        const bg = getBgImage(el);
-        if (bg) return { src: toAbsolute(bg), debug };
-      }
-
-      const authorLink =
-        document.querySelector('a[href*="/@"]') ||
-        document.querySelector('[data-testid="authorName"] a') ||
-        document.querySelector('a[data-user-id]');
-      if (authorLink) {
-        const img = authorLink.querySelector("img");
-        debug.push({ selector: 'authorLink -> img', found: !!img, outerHTML: img ? img.outerHTML.slice(0, 300) : null });
-        const src = getSrcFromImg(img);
-        if (src) return { src: toAbsolute(src), debug };
-        const bg = getBgImage(img);
-        if (bg) return { src: toAbsolute(bg), debug };
-      }
-
-      const imgs = Array.from(document.querySelectorAll("img")).slice(0, 40);
-      for (const img of imgs) {
-        const rect = img.getBoundingClientRect();
-        if ((rect.width && rect.width <= 120) || (rect.height && rect.height <= 120)) {
-          const src = getSrcFromImg(img);
-          debug.push({ selector: "fallback small img", found: !!img, outerHTML: img.outerHTML.slice(0, 300) });
-          if (src) return { src: toAbsolute(src), debug };
-        }
-      }
-
-      return { src: null, debug };
+    const { data: html } = await axios.get(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      },
     });
 
-    if (result && result.src) {
-    } else {
-      console.warn("Author image not found.");
-      console.log("Debug info (first few attempts):", result.debug.slice(0, 6));
+    const $ = cheerio.load(html);
+
+    // Known Medium avatar selectors
+    const selectors = [
+      'img[data-testid="authorAvatar"]',
+      'img[alt*="avatar"]',
+      'img[src*="medium.com/_/stat?"]',          // Medium CDN avatar
+      'a[href*="/@"] img',                       // Author profile link → img inside
+      'figure img[width][height]',               // Medium small avatar usually fixed size
+    ];
+
+    // Extract src safely
+    const extractSrc = (img: cheerio.Cheerio<any>): string | null => {
+      if (!img || img.length === 0) return null;
+
+      const src =
+        img.attr("src") ||
+        img.attr("data-src") ||
+        img.attr("data-image-src") ||
+        undefined;
+
+      if (typeof src === "string" && src.trim().length > 5) {
+        return new URL(src, url).href; // convert relative → absolute
+      }
+
+      // srcset fallback
+      const srcset = img.attr("srcset");
+      if (srcset) {
+        const first = srcset.split(",")[0]?.trim().split(" ")[0];
+        if (first) return new URL(first, url).href;
+      }
+
+      return null;
+    };
+
+    // Try primary selectors
+    for (const sel of selectors) {
+      const img = $(sel).first();
+      const src = extractSrc(img);
+      if (src) return src;
     }
 
-    return result.src ?? "https://ik.imagekit.io/mrityunjay/download.png?updatedAt=1762634201648";
+    // Last fallback → find first small square-ish image
+    const fallbackImg = $("img")
+      .filter(function () {
+        const w = parseInt($(this).attr("width") || "0");
+        const h = parseInt($(this).attr("height") || "0");
+        return w > 30 && w < 200 && h > 30 && h < 200;
+      })
+      .first();
+
+    const fallbackSrc = extractSrc(fallbackImg);
+    if (fallbackSrc) return fallbackSrc;
+
+    // Default fallback
+    return "https://ik.imagekit.io/mrityunjay/download.png";
   } catch (err) {
-    console.error("Error scraping author image:", err);
-    return "https://ik.imagekit.io/mrityunjay/download.png?updatedAt=1762634201648";
-  } finally {
-    await browser.close();
+    console.error("Error scraping avatar:", err);
+    return "https://ik.imagekit.io/mrityunjay/download.png";
   }
 }
-
-
-
-
-
-
-
-
-
-
