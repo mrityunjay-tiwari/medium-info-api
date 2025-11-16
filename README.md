@@ -11,7 +11,7 @@ A lightweight utility to extract all the useful information from **Medium articl
 - Comments Count
 - Initial Line
 
-This package is designed to be **modular**: fast information is fetched immediately, and heavy operations (fetching author avatar) are intentionally separated so the main response stays fast.
+This package is designed to be **modular**: fast information is fetched immediately.
 
 ---
 
@@ -32,7 +32,7 @@ yarn add medium-info-api
 ```ts
 import express from "express";
 import cors from "cors";
-import { getArticleInfo, getAuthorAvatar } from "medium-info-api";
+import { getArticleInfo } from "medium-info-api";
 
 const app = express();
 app.use(cors());
@@ -58,34 +58,11 @@ app.get("/medium", async (req, res) => {
     });
   }
 });
-
-app.get("/medium/avatar", async (req, res) => {
-  const url = req.query.url as string;
-
-  if (!url) {
-    return res.status(400).json({ error: "Missing url parameter" });
-  }
-
-  try {
-    const result = await getAuthorAvatar(url);
-    return res.json({
-      success: true,
-      data: result,
-    });
-  } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch author avatar",
-      error: err
-    });
-  }
-});
 ```
 
 ### How the API Works
 
-Endpoint: /medium?url=<article_url> Purpose: Fetch all article info except author avatar
-Endpoint: /medium/avatar?url=<article_url> Purpose: Fetch only the author avatar
+Endpoint: /medium?url=<article_url> Purpose: Fetch all article info 
 
 
 ### Example Response
@@ -102,23 +79,30 @@ Endpoint: /medium/avatar?url=<article_url> Purpose: Fetch only the author avatar
     "clapCount": "1.2k",
     "commentsCount": "72",
     "heroImage": "https://miro.medium.com/v2/resize:fit:1200/1*71nGDtlRxS8JNC0YVwLEBw.jpeg",
+    "authorAvatar":"https://miro.medium.com/v2/resize:fill:64:64/1*azHxRVLkd-GHvXxlvgdChw.jpeg"
   },
 
 }
 ```
 
-### Why Avatar is Separate?
+### How the package works?
 
-Fetching the avatar uses Playwright, which:
-- Launches a browser instance
-- Increases processing time
-- Slows down the overall API call if included in the main request
+medium-info-api scrapes publicly available data from Medium articles and author pages, without using any heavy browser automation tools, it simply uses axios and cheerio.
 
-So the design here is:
-- Get main article info instantly
-- Fetch avatar only when needed
-- This keeps your app fast and responsive.
+1. HTML Fetching with Axios
+Medium pages are downloaded using axios, which is significantly faster and lighter than browser-based scrapers.
 
+2. Reliable HTML parsing with Cheerio
+Cheerio works to extract information using stable Medium DOM patterns, fallback selectors, and multiple verification layers ensuring accuracy even if Medium slightly changes its layout.
+
+3. Fallback Logics
+Fallback logics are provided whereever required e.g. in authorAvatar, the page checks all the possibilities. If Medium changes formatting, it gracefully falls back to a safe default avatar.
+
+4. Full Severless Compatible
+Since it only uses axios and cheerio, the applications built on top of this are easily deployable on Vercel, Netlify, AWS Lambda, Supabase Edge, Cloudflare Workers etc.
+
+5. Lightweight and Effecient
+The average execution time is around 5-40 ms making it suitable for API Routes, Next.js PPR, Incremental Static Regeneration (ISR), Edge functions, On-demand requests etc.
 
 ### Contributing
 
